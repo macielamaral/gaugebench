@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GaugeBench — Verifiable Quantum Metrics</title>
+  <meta name="description" content="The open standard for verifiable quantum benchmarking with cryptographic provenance.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+          },
+          colors: {
+            surface: {
+              0: '#09090b',
+              1: '#0f0f12',
+              2: '#18181b',
+              3: '#1e1e22',
+              4: '#27272a',
+            },
+            accent: {
+              DEFAULT: '#a78bfa',
+              dim: '#7c3aed',
+              bright: '#c4b5fd',
+            },
+            mint: '#34d399',
+            coral: '#f87171',
+          },
+        },
+      },
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #09090b;
+      background-image:
+        linear-gradient(rgba(255,255,255,.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.015) 1px, transparent 1px);
+      background-size: 64px 64px;
+    }
+    .glow-line {
+      background: linear-gradient(90deg, transparent, rgba(167,139,250,.25), transparent);
+      height: 1px;
+    }
+    .card-border {
+      border: 1px solid rgba(255,255,255,.06);
+    }
+    .card-border:hover {
+      border-color: rgba(167,139,250,.2);
+    }
+    .terminal {
+      counter-reset: line;
+    }
+    .terminal-line::before {
+      counter-increment: line;
+    }
+    ::selection {
+      background: rgba(167,139,250,.3);
+    }
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up {
+      animation: fade-up .5s ease-out both;
+    }
+    .fade-up-d1 { animation-delay: .1s; }
+    .fade-up-d2 { animation-delay: .2s; }
+    .fade-up-d3 { animation-delay: .3s; }
+  </style>
+</head>
+<body class="text-zinc-300 font-sans antialiased">
+
+  <!-- ────────────────── NAV ────────────────── -->
+  <nav class="fixed top-0 inset-x-0 z-50 border-b border-white/[.06] bg-surface-0/80 backdrop-blur-xl">
+    <div class="max-w-6xl mx-auto flex items-center justify-between h-14 px-5">
+      <div class="flex items-center gap-3">
+        <a href="#" class="text-white font-semibold tracking-tight text-[15px]">GaugeBench</a>
+        <span class="text-[11px] font-mono font-medium bg-accent-dim/20 text-accent-bright px-1.5 py-0.5 rounded">v0.1.0</span>
+      </div>
+      <div class="flex items-center gap-6 text-sm text-zinc-400">
+        <a href="#quickstart" class="hidden sm:block hover:text-white transition">Quickstart</a>
+        <a href="#how-it-works" class="hidden sm:block hover:text-white transition">How It Works</a>
+        <a href="https://arxiv.org/abs/2506.21643" target="_blank" rel="noopener" class="hidden sm:block hover:text-white transition">arXiv</a>
+        <a href="https://github.com/macielamaral/gaugebench" target="_blank" rel="noopener" class="flex items-center gap-1.5 hover:text-white transition">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2Z" clip-rule="evenodd"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="pt-14">
+
+    <!-- ────────────────── HERO ────────────────── -->
+    <section class="relative overflow-hidden">
+      <div class="absolute inset-0 bg-gradient-to-b from-accent-dim/[.06] via-transparent to-transparent pointer-events-none"></div>
+      <div class="max-w-3xl mx-auto text-center px-5 pt-28 pb-24 sm:pt-36 sm:pb-32 relative">
+        <p class="fade-up text-xs font-mono uppercase tracking-[.2em] text-accent mb-6">Open-Source Quantum Benchmarking</p>
+        <h1 class="fade-up fade-up-d1 text-4xl sm:text-5xl md:text-6xl font-bold text-white tracking-tight leading-[1.1]">
+          GaugeBench
+        </h1>
+        <p class="fade-up fade-up-d2 mt-5 text-lg sm:text-xl text-zinc-400 max-w-xl mx-auto leading-relaxed">
+          The Open Standard for Verifiable Quantum&nbsp;Metrics.
+        </p>
+        <div class="fade-up fade-up-d3 mt-10 flex flex-wrap justify-center gap-3">
+          <a href="https://github.com/macielamaral/gaugebench" target="_blank" rel="noopener"
+             class="inline-flex items-center gap-2 bg-white text-black text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-zinc-200 transition">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2Z" clip-rule="evenodd"/></svg>
+            View on GitHub
+          </a>
+          <a href="#how-it-works"
+             class="inline-flex items-center gap-1.5 border border-white/10 text-sm font-medium px-5 py-2.5 rounded-lg text-zinc-300 hover:border-white/20 hover:text-white transition">
+            Read the Spec
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="glow-line"></div>
+    </section>
+
+    <!-- ────────────────── VALUE PROPS ────────────────── -->
+    <section class="max-w-6xl mx-auto px-5 py-20 sm:py-28">
+      <div class="grid md:grid-cols-3 gap-5">
+
+        <div class="card-border rounded-xl bg-surface-1 p-7 transition-colors">
+          <div class="w-9 h-9 rounded-lg bg-accent-dim/15 flex items-center justify-center mb-5">
+            <svg class="w-[18px] h-[18px] text-accent" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5V18M15 7.5V18M3 16.811V8.69c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 0 1 0 1.954l-7.108 4.061A1.125 1.125 0 0 1 3 16.811Z"/></svg>
+          </div>
+          <h3 class="text-white font-semibold text-[15px] mb-2">Physics-Native</h3>
+          <p class="text-sm text-zinc-400 leading-relaxed">
+            Orchestrates Fibonacci anyon (IBM&thinsp;/&thinsp;QIC) and forbidden-word Hamiltonian hierarchy (D-Wave) workloads.
+          </p>
+        </div>
+
+        <div class="card-border rounded-xl bg-surface-1 p-7 transition-colors">
+          <div class="w-9 h-9 rounded-lg bg-accent-dim/15 flex items-center justify-center mb-5">
+            <svg class="w-[18px] h-[18px] text-accent" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
+          </div>
+          <h3 class="text-white font-semibold text-[15px] mb-2">Cryptographic Provenance</h3>
+          <p class="text-sm text-zinc-400 leading-relaxed">
+            Generates Intelexta-compatible Content-Addressable Receipts (CAR&nbsp;v0.3) that bind configs&nbsp;+&nbsp;results.
+          </p>
+        </div>
+
+        <div class="card-border rounded-xl bg-surface-1 p-7 transition-colors">
+          <div class="w-9 h-9 rounded-lg bg-accent-dim/15 flex items-center justify-center mb-5">
+            <svg class="w-[18px] h-[18px] text-accent" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg>
+          </div>
+          <h3 class="text-white font-semibold text-[15px] mb-2">Zero Trust Verification</h3>
+          <p class="text-sm text-zinc-400 leading-relaxed">
+            Verify benchmarks locally&mdash;no central server required. Tamper detection is built&nbsp;in.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ────────────────── QUICKSTART ────────────────── -->
+    <section id="quickstart" class="scroll-mt-16">
+      <div class="glow-line"></div>
+      <div class="max-w-3xl mx-auto px-5 py-20 sm:py-28">
+        <p class="text-xs font-mono uppercase tracking-[.2em] text-accent mb-3">Quickstart</p>
+        <h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-10">Up and running in&nbsp;seconds</h2>
+
+        <div class="relative card-border rounded-xl bg-surface-1 overflow-hidden">
+          <div class="flex items-center gap-1.5 px-4 py-3 border-b border-white/[.06]">
+            <span class="w-2.5 h-2.5 rounded-full bg-white/10"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-white/10"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-white/10"></span>
+            <span class="ml-3 text-xs font-mono text-zinc-500">terminal</span>
+          </div>
+          <pre class="p-5 text-[13px] leading-[1.7] font-mono overflow-x-auto"><code><span class="text-zinc-500">$</span> <span class="text-white">pip install -e .</span>
+
+<span class="text-zinc-500">$</span> <span class="text-white">gaugebench run qic --backend ibm_brisbane --out runs/qic_01</span>
+<span class="text-mint">&gt; Run complete. Receipt ID: car:f3e34810...24</span>
+
+<span class="text-zinc-500">$</span> <span class="text-white">gaugebench verify runs/qic_01</span>
+<span class="text-mint font-semibold">&gt; VERIFIED</span>
+
+<span class="text-zinc-600"># Tamper detection test</span>
+<span class="text-zinc-500">$</span> <span class="text-white">echo "hack" >> runs/qic_01/results.json</span>
+<span class="text-zinc-500">$</span> <span class="text-white">gaugebench verify runs/qic_01</span>
+<span class="text-coral">&gt; Hash mismatch for 'results':</span>
+<span class="text-coral">&gt;   expected sha256:845a...</span>
+<span class="text-coral">&gt;   got      sha256:a4f8...</span>
+<span class="text-coral font-semibold">&gt; TAMPERED</span></code></pre>
+        </div>
+
+        <p class="mt-5 text-xs text-zinc-500 leading-relaxed">
+          Hardware backends (IBM/D-Wave) are optional and may require your own credentials; verification never requires rerunning.
+        </p>
+      </div>
+    </section>
+
+    <!-- ────────────────── HOW IT WORKS ────────────────── -->
+    <section id="how-it-works" class="scroll-mt-16">
+      <div class="glow-line"></div>
+      <div class="max-w-3xl mx-auto px-5 py-20 sm:py-28">
+        <p class="text-xs font-mono uppercase tracking-[.2em] text-accent mb-3">Architecture</p>
+        <h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-10">Proof-carrying benchmarks</h2>
+
+        <div class="space-y-5">
+          <div class="flex gap-4 items-start">
+            <span class="mt-1 flex-shrink-0 w-6 h-6 rounded-md bg-surface-3 border border-white/[.06] flex items-center justify-center text-xs font-mono text-zinc-400">1</span>
+            <p class="text-[15px] text-zinc-300 leading-relaxed">
+              Each run emits four artifacts: <code class="text-accent-bright font-mono text-[13px] bg-white/[.04] px-1.5 py-0.5 rounded">manifest.json</code>,
+              <code class="text-accent-bright font-mono text-[13px] bg-white/[.04] px-1.5 py-0.5 rounded">provenance.json</code>,
+              <code class="text-accent-bright font-mono text-[13px] bg-white/[.04] px-1.5 py-0.5 rounded">results.json</code>, and
+              <code class="text-accent-bright font-mono text-[13px] bg-white/[.04] px-1.5 py-0.5 rounded">receipt.json</code>.
+            </p>
+          </div>
+          <div class="flex gap-4 items-start">
+            <span class="mt-1 flex-shrink-0 w-6 h-6 rounded-md bg-surface-3 border border-white/[.06] flex items-center justify-center text-xs font-mono text-zinc-400">2</span>
+            <p class="text-[15px] text-zinc-300 leading-relaxed">
+              <code class="text-accent-bright font-mono text-[13px] bg-white/[.04] px-1.5 py-0.5 rounded">receipt.json</code> is content-addressed:
+              its ID is <code class="text-accent-bright font-mono text-[13px] bg-white/[.04] px-1.5 py-0.5 rounded">car:SHA256</code> of the canonical JSON body, binding every artifact hash.
+            </p>
+          </div>
+          <div class="flex gap-4 items-start">
+            <span class="mt-1 flex-shrink-0 w-6 h-6 rounded-md bg-surface-3 border border-white/[.06] flex items-center justify-center text-xs font-mono text-zinc-400">3</span>
+            <p class="text-[15px] text-zinc-300 leading-relaxed">
+              <code class="text-accent-bright font-mono text-[13px] bg-white/[.04] px-1.5 py-0.5 rounded">gaugebench verify</code> re-hashes every artifact on disk and re-derives the receipt ID&mdash;no network call, no trust assumptions.
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-12 card-border rounded-xl bg-surface-1 p-6">
+          <p class="text-xs font-mono uppercase tracking-widest text-zinc-500 mb-4">Output directory</p>
+          <pre class="text-[13px] font-mono leading-[1.8] text-zinc-400"><code>runs/qic_01/
+<span class="text-zinc-500">  ├──</span> manifest.json        <span class="text-zinc-600">← config + run UUID</span>
+<span class="text-zinc-500">  ├──</span> provenance.json      <span class="text-zinc-600">← git commit hashes</span>
+<span class="text-zinc-500">  ├──</span> results.json         <span class="text-zinc-600">← benchmark metrics</span>
+<span class="text-zinc-500">  └──</span> <span class="text-accent-bright">receipt.json</span>         <span class="text-zinc-600">← CAR v0.3 receipt</span></code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ────────────────── ENGINES ────────────────── -->
+    <section>
+      <div class="glow-line"></div>
+      <div class="max-w-3xl mx-auto px-5 py-20 sm:py-28">
+        <p class="text-xs font-mono uppercase tracking-[.2em] text-accent mb-3">Engines</p>
+        <h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-10">Backed by real physics</h2>
+
+        <div class="grid sm:grid-cols-2 gap-5">
+
+          <a href="https://github.com/macielamaral/quasicrystal-inflation-code" target="_blank" rel="noopener"
+             class="group card-border rounded-xl bg-surface-1 p-6 transition-colors block">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-white font-semibold text-[15px]">QIC</h3>
+              <svg class="w-4 h-4 text-zinc-500 group-hover:text-accent transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 19.5 15-15m0 0H8.25m11.25 0v11.25"/></svg>
+            </div>
+            <p class="text-sm text-zinc-400 leading-relaxed mb-3">Gate-based engine for Fibonacci anyon braiding on IBM quantum hardware.</p>
+            <span class="text-xs font-mono text-zinc-500">external/qic</span>
+          </a>
+
+          <a href="https://github.com/gaugefreedom/quasicrystal-inflation-code-hierarchy" target="_blank" rel="noopener"
+             class="group card-border rounded-xl bg-surface-1 p-6 transition-colors block">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-white font-semibold text-[15px]">Hierarchy</h3>
+              <svg class="w-4 h-4 text-zinc-500 group-hover:text-accent transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 19.5 15-15m0 0H8.25m11.25 0v11.25"/></svg>
+            </div>
+            <p class="text-sm text-zinc-400 leading-relaxed mb-3">Annealing engine for forbidden-word Hamiltonian hierarchies on D-Wave.</p>
+            <span class="text-xs font-mono text-zinc-500">external/hierarchy</span>
+          </a>
+
+        </div>
+        <p class="mt-5 text-xs text-zinc-500">Used as git submodules in GaugeBench.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ────────────────── FOOTER ────────────────── -->
+  <footer class="border-t border-white/[.06]">
+    <div class="max-w-6xl mx-auto px-5 py-10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
+      <p>Built by Marcelo M. Amaral.</p>
+      <div class="flex items-center gap-5">
+        <a href="https://github.com/macielamaral/gaugebench" target="_blank" rel="noopener" class="hover:text-zinc-300 transition">GitHub</a>
+        <a href="https://arxiv.org/abs/2511.10672" target="_blank" rel="noopener" class="hover:text-zinc-300 transition">arXiv (Hierarchy)</a>
+        <a href="https://arxiv.org/abs/2506.21643" target="_blank" rel="noopener" class="hover:text-zinc-300 transition">arXiv (QIC)</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
