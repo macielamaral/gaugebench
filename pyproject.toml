@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gaugebench"
+version = "0.1.0"
+description = "Verifiable Quantum Benchmarking with Content-Addressable Receipts"
+requires-python = ">=3.10"
+license = "MIT"
+
+[project.scripts]
+gaugebench = "gaugebench.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["gaugebench*"]
