@@ -1,0 +1,6 @@
+[submodule "external/qic"]
+	path = external/qic
+	url = https://github.com/macielamaral/quasicrystal-inflation-code
+[submodule "external/hierarchy"]
+	path = external/hierarchy
+	url = https://github.com/gaugefreedom/quasicrystal-inflation-code-hierarchy
