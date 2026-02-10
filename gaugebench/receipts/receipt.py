@@ -2,13 +2,31 @@
 Intelexta Content-Addressable Receipt (CAR) v0.3 generation and verification.
 
 Produces receipts compatible with car-v0.3.schema.json and verify.intelexta.com.
+Supports optional Ed25519 signing when pynacl is installed (pip install gaugebench[sign]).
 """
 
+import base64
 import hashlib
 import json
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
+
+# ---------------------------------------------------------------------------
+# Optional nacl import — signing is available only when pynacl is installed.
+# ---------------------------------------------------------------------------
+try:
+    import nacl.signing
+    import nacl.encoding
+    _HAS_NACL = True
+except ModuleNotFoundError:
+    _HAS_NACL = False
+
+_IDENTITY_DIR = Path.home() / ".gaugebench"
+_IDENTITY_KEY = _IDENTITY_DIR / "identity.key"
+
+# Backends that imply real hardware (egress = True)
+_SIMULATOR_KEYWORDS = {"aer", "simulator", "mock", "fake", "sim", "local"}
 
 
 # ---------------------------------------------------------------------------
@@ -35,6 +53,50 @@ def hash_file(path: Path) -> str:
 def _iso_now() -> str:
     """UTC ISO-8601 timestamp with Z suffix."""
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def _needs_egress(backend: str) -> bool:
+    """Return True if the backend name suggests real hardware (not a simulator)."""
+    lower = backend.lower()
+    return not any(kw in lower for kw in _SIMULATOR_KEYWORDS)
+
+
+# ---------------------------------------------------------------------------
+# Key management (optional — requires pynacl)
+# ---------------------------------------------------------------------------
+
+def _get_signing_key():
+    """
+    Load or create an Ed25519 signing key from ~/.gaugebench/identity.key.
+
+    Returns the nacl.signing.SigningKey, or None if pynacl is not installed.
+    """
+    if not _HAS_NACL:
+        return None
+
+    if _IDENTITY_KEY.exists():
+        raw = _IDENTITY_KEY.read_bytes()
+        return nacl.signing.SigningKey(raw)
+
+    # Generate a new keypair and persist it
+    _IDENTITY_DIR.mkdir(parents=True, exist_ok=True)
+    key = nacl.signing.SigningKey.generate()
+    _IDENTITY_KEY.write_bytes(bytes(key))
+    _IDENTITY_KEY.chmod(0o600)
+    return key
+
+
+def _sign_message(signing_key, message: str) -> str:
+    """Sign a message string and return base64-encoded signature."""
+    sig = signing_key.sign(message.encode("utf-8")).signature
+    return base64.b64encode(sig).decode()
+
+
+def _public_key_b64(signing_key) -> str:
+    """Return the base64-encoded public key."""
+    return signing_key.verify_key.encode(
+        encoder=nacl.encoding.Base64Encoder
+    ).decode()
 
 
 # ---------------------------------------------------------------------------
@@ -71,7 +133,46 @@ def create_car(
     else:
         policy_hash = hash_sha256(b"")
 
-    # Build the CAR body (everything except id and signatures)
+    # --- Signing key (optional) ---
+    signing_key = _get_signing_key()
+
+    # --- Process-mode checkpoint ---
+    ckpt_id = f"ckpt:{uuid.uuid4().hex}"
+    prev_chain = ""
+
+    checkpoint_body = {
+        "run_id": run_id,
+        "kind": "Step",
+        "timestamp": created_at,
+        "inputs_sha256": manifest_hash,
+        "outputs_sha256": results_hash,
+        "usage_tokens": 0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+    }
+    checkpoint_canonical = canonicalize(checkpoint_body).decode("utf-8")
+    curr_chain = hash_sha256((prev_chain + checkpoint_canonical).encode("utf-8"))
+
+    ckpt_signature = ""
+    if signing_key is not None:
+        ckpt_signature = _sign_message(signing_key, curr_chain)
+
+    checkpoint = {
+        "id": ckpt_id,
+        "prev_chain": prev_chain,
+        "curr_chain": curr_chain,
+        "signature": ckpt_signature,
+        "run_id": run_id,
+        "kind": "Step",
+        "timestamp": created_at,
+        "inputs_sha256": manifest_hash,
+        "outputs_sha256": results_hash,
+        "usage_tokens": 0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+    }
+
+    # --- Build the CAR body (everything except id and signatures) ---
     car_body = {
         "run_id": run_id,
         "created_at": created_at,
@@ -97,11 +198,14 @@ def create_car(
             ],
         },
         "proof": {
-            "match_kind": "exact",
+            "match_kind": "process",
+            "process": {
+                "sequential_checkpoints": [checkpoint],
+            },
         },
         "policy_ref": {
             "hash": f"sha256:{policy_hash}",
-            "egress": False,
+            "egress": _needs_egress(backend),
             "estimator": "gaugebench.walltime.v0",
         },
         "budgets": {
@@ -114,7 +218,7 @@ def create_car(
             {"claim_type": "results", "sha256": f"sha256:{results_hash}"},
             {"claim_type": "git_context", "sha256": f"sha256:{provenance_hash}"},
         ],
-        "checkpoints": ["ckpt:init"],
+        "checkpoints": [ckpt_id],
         "sgrade": {
             "score": 100,
             "components": {
@@ -125,15 +229,20 @@ def create_car(
                 "incidents": 0.0,
             },
         },
-        "signer_public_key": "AA==",
-        "signatures": ["unsigned:placeholder"],
+        "signer_public_key": _public_key_b64(signing_key) if signing_key else "AA==",
     }
 
-    # Content-addressable ID = SHA-256 of canonical body (without id/signatures)
-    body_for_hash = {k: v for k, v in car_body.items() if k != "signatures"}
-    car_id = f"car:{hash_sha256(canonicalize(body_for_hash))}"
+    # Content-addressable ID = SHA-256 of canonical body
+    car_id = f"car:{hash_sha256(canonicalize(car_body))}"
 
-    car = {"id": car_id, **car_body}
+    # --- Signatures ---
+    if signing_key is not None:
+        sig = _sign_message(signing_key, car_id)
+        signatures = [f"ed25519:{sig}"]
+    else:
+        signatures = ["unsigned:placeholder"]
+
+    car = {"id": car_id, **car_body, "signatures": signatures}
 
     # Write receipt
     receipt_path = output_dir / "receipt.json"
@@ -154,6 +263,8 @@ def verify_car(receipt_dir: Path) -> bool:
     Checks:
       1. Each provenance claim hash matches the corresponding file.
       2. The car id matches the re-derived content-addressable hash.
+      3. Process checkpoint chain integrity (curr_chain).
+      4. Ed25519 signature on the CAR id (if pynacl is available and receipt is signed).
 
     Returns True if everything checks out, False otherwise.
     """
@@ -194,5 +305,51 @@ def verify_car(receipt_dir: Path) -> bool:
         print(f"    expected {expected_id}")
         print(f"    got      {car['id']}")
         return False
+
+    # --- 3. Verify checkpoint chain ---
+    proof = car.get("proof", {})
+    if proof.get("match_kind") == "process":
+        checkpoints = proof.get("process", {}).get("sequential_checkpoints", [])
+        prev = ""
+        for ckpt in checkpoints:
+            ckpt_body = {
+                "run_id": ckpt["run_id"],
+                "kind": ckpt["kind"],
+                "timestamp": ckpt["timestamp"],
+                "inputs_sha256": ckpt["inputs_sha256"],
+                "outputs_sha256": ckpt["outputs_sha256"],
+                "usage_tokens": ckpt["usage_tokens"],
+                "prompt_tokens": ckpt["prompt_tokens"],
+                "completion_tokens": ckpt["completion_tokens"],
+            }
+            canonical = canonicalize(ckpt_body).decode("utf-8")
+            expected_chain = hash_sha256((prev + canonical).encode("utf-8"))
+
+            if ckpt["curr_chain"] != expected_chain:
+                print(f"  Checkpoint chain mismatch for '{ckpt['id']}':")
+                print(f"    expected {expected_chain}")
+                print(f"    got      {ckpt['curr_chain']}")
+                return False
+            prev = ckpt["curr_chain"]
+
+    # --- 4. Verify Ed25519 signature (if signed and pynacl available) ---
+    signatures = car.get("signatures", [])
+    has_real_sig = any(s.startswith("ed25519:") for s in signatures)
+
+    if has_real_sig and _HAS_NACL:
+        pub_b64 = car.get("signer_public_key", "")
+        if pub_b64 and pub_b64 != "AA==":
+            try:
+                pub_bytes = base64.b64decode(pub_b64)
+                verify_key = nacl.signing.VerifyKey(pub_bytes)
+                for sig_entry in signatures:
+                    if not sig_entry.startswith("ed25519:"):
+                        continue
+                    sig_b64 = sig_entry[len("ed25519:"):]
+                    sig_bytes = base64.b64decode(sig_b64)
+                    verify_key.verify(car["id"].encode("utf-8"), sig_bytes)
+            except Exception as exc:
+                print(f"  Signature verification failed: {exc}")
+                return False
 
     return True

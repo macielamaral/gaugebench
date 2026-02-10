@@ -18,6 +18,14 @@ If you already cloned without submodules:
 git submodule update --init --recursive
 ```
 
+### Optional: Enable Ed25519 signing
+
+```bash
+pip install -e ".[sign]"
+```
+
+This installs `pynacl` and enables real Ed25519 signatures on receipts. On first run, a keypair is generated at `~/.gaugebench/identity.key`. Without this extra, receipts are still generated but marked `unsigned:placeholder`.
+
 ## Usage
 
 ### Run a gate-based benchmark
@@ -40,11 +48,17 @@ gaugebench verify runs/qic_01
 
 A successful verification prints **VERIFIED**. If any artifact has been modified, it prints **TAMPERED**.
 
+Verification checks:
+- Provenance claim hashes match artifact files on disk
+- Content-addressable ID re-derives correctly
+- Process checkpoint chain integrity
+- Ed25519 signature (when pynacl is installed and receipt is signed)
+
 ### Using as a Python module
 
 ```bash
-python -m gaugebench.cli run qic --backend ibm_brisbane --out runs/test_01
-python -m gaugebench.cli verify runs/test_01
+python -m gaugebench run qic --backend ibm_brisbane --out runs/test_01
+python -m gaugebench verify runs/test_01
 ```
 
 ## How It Works
@@ -58,4 +72,4 @@ Each run produces four files in the output directory:
 | `results.json` | Benchmark metrics (mock data in this bootstrap version) |
 | `receipt.json` | CAR v0.3 receipt binding all artifacts together |
 
-The receipt ID (`car:<sha256>`) is derived from the canonical JSON hash of the receipt body. Verification re-hashes every artifact and re-derives the ID — no central server required.
+The receipt uses **process-mode proofs**: a checkpoint links `inputs_sha256` (manifest) to `outputs_sha256` (results) via a hash chain. The receipt ID (`car:<sha256>`) is derived from the canonical JSON hash of the receipt body. Verification re-hashes every artifact, re-derives the chain, and re-derives the ID — no central server required.

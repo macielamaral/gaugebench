@@ -9,6 +9,9 @@ description = "Verifiable Quantum Benchmarking with Content-Addressable Receipts
 requires-python = ">=3.10"
 license = "MIT"
 
+[project.optional-dependencies]
+sign = ["pynacl>=1.5.0"]
+
 [project.scripts]
 gaugebench = "gaugebench.cli:main"
 
