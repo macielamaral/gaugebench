@@ -208,3 +208,13 @@ __marimo__/
 
 # local dev
 .agent/
+
+# secrets
+.env
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.cer
+*.der
