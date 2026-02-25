@@ -3,11 +3,13 @@ Intelexta Content-Addressable Receipt (CAR) v0.3 generation and verification.
 
 Produces receipts compatible with car-v0.3.schema.json and verify.intelexta.com.
 Supports optional Ed25519 signing when pynacl is installed (pip install gaugebench[sign]).
+Set GAUGEBENCH_DISABLE_SIGN=1 to force unsigned receipts even if pynacl is installed.
 """
 
 import base64
 import hashlib
 import json
+import os
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -46,7 +48,7 @@ def hash_sha256(data: bytes) -> str:
 
 
 def hash_file(path: Path) -> str:
-    """Read a file and return its SHA-256 hex digest."""
+    """Read a file and return its SHA-256 hex digest (raw bytes)."""
     return hash_sha256(path.read_bytes())
 
 
@@ -69,8 +71,12 @@ def _get_signing_key():
     """
     Load or create an Ed25519 signing key from ~/.gaugebench/identity.key.
 
-    Returns the nacl.signing.SigningKey, or None if pynacl is not installed.
+    Returns the nacl.signing.SigningKey, or None if:
+      - pynacl is not installed, OR
+      - GAUGEBENCH_DISABLE_SIGN=1 is set in the environment.
     """
+    if os.getenv("GAUGEBENCH_DISABLE_SIGN") == "1":
+        return None
     if not _HAS_NACL:
         return None
 
@@ -110,18 +116,26 @@ def create_car(
     results: dict,
     engine: str,
     backend: str,
+    extra_provenance: list | None = None,
 ) -> dict:
     """
     Assemble a CAR v0.3 receipt, write it to *output_dir*/receipt.json,
     and return the full CAR dict.
 
-    The receipt covers three artifacts already on disk:
+    The receipt covers three standard artifacts already on disk:
       manifest.json, results.json, provenance.json
+
+    *extra_provenance* may be a list of additional provenance claim dicts,
+    each with keys ``claim_type`` and ``sha256``.  These are appended after
+    the standard three claims (e.g. ``input:inputs/path/to/file`` claims
+    produced by the wrap runner).
     """
-    run_id = str(uuid.uuid4())
+    # Reuse the run_id from the manifest so the receipt and manifest share the
+    # same identifier; fall back to a fresh UUID only if the manifest omits it.
+    run_id = manifest.get("run_id") or str(uuid.uuid4())
     created_at = _iso_now()
 
-    # Hash the three artifact files (canonical bytes)
+    # Hash the three standard artifact files (canonical bytes)
     manifest_hash = hash_sha256(canonicalize(manifest))
     results_hash = hash_sha256(canonicalize(results))
     provenance_hash = hash_sha256(canonicalize(provenance))
@@ -172,6 +186,15 @@ def create_car(
         "completion_tokens": 0,
     }
 
+    # --- Provenance claims ---
+    provenance_claims = [
+        {"claim_type": "manifest", "sha256": f"sha256:{manifest_hash}"},
+        {"claim_type": "results", "sha256": f"sha256:{results_hash}"},
+        {"claim_type": "git_context", "sha256": f"sha256:{provenance_hash}"},
+    ]
+    if extra_provenance:
+        provenance_claims.extend(extra_provenance)
+
     # --- Build the CAR body (everything except id and signatures) ---
     car_body = {
         "run_id": run_id,
@@ -213,11 +236,7 @@ def create_car(
             "tokens": 0,
             "nature_cost": 0.0,
         },
-        "provenance": [
-            {"claim_type": "manifest", "sha256": f"sha256:{manifest_hash}"},
-            {"claim_type": "results", "sha256": f"sha256:{results_hash}"},
-            {"claim_type": "git_context", "sha256": f"sha256:{provenance_hash}"},
-        ],
+        "provenance": provenance_claims,
         "checkpoints": [ckpt_id],
         "sgrade": {
             "score": 100,
@@ -262,6 +281,9 @@ def verify_car(receipt_dir: Path) -> bool:
 
     Checks:
       1. Each provenance claim hash matches the corresponding file.
+         - Standard claims (manifest, results, git_context): JSON-canonicalized hash.
+         - input:* claims: raw-bytes SHA-256 of the file at receipt_dir/<path>.
+           A missing file is treated as TAMPERED (not a missing-artifact error).
       2. The car id matches the re-derived content-addressable hash.
       3. Process checkpoint chain integrity (curr_chain).
       4. Ed25519 signature on the CAR id (if pynacl is available and receipt is signed).
@@ -272,7 +294,7 @@ def verify_car(receipt_dir: Path) -> bool:
     car = json.loads(receipt_path.read_text(encoding="utf-8"))
 
     # --- 1. Verify provenance hashes ---
-    claim_file_map = {
+    standard_claim_map = {
         "manifest": receipt_dir / "manifest.json",
         "results": receipt_dir / "results.json",
         "git_context": receipt_dir / "provenance.json",
@@ -282,13 +304,24 @@ def verify_car(receipt_dir: Path) -> bool:
         claim_type = claim["claim_type"]
         expected = claim["sha256"]  # "sha256:<hex>"
 
-        artifact_path = claim_file_map.get(claim_type)
-        if artifact_path is None or not artifact_path.exists():
-            print(f"  Missing artifact for claim '{claim_type}': {artifact_path}")
-            return False
-
-        artifact_data = json.loads(artifact_path.read_text(encoding="utf-8"))
-        actual_hash = f"sha256:{hash_sha256(canonicalize(artifact_data))}"
+        if claim_type.startswith("input:"):
+            # Raw-bytes hash for wrapped input files.
+            # A missing file is a TAMPERED signal, not a setup error.
+            rel = claim_type[len("input:"):]
+            artifact_path = receipt_dir / rel
+            if not artifact_path.exists():
+                print(f"  Hash mismatch for '{claim_type}': file missing")
+                print(f"    expected {expected}")
+                print(f"    got      <missing>")
+                return False
+            actual_hash = f"sha256:{hash_file(artifact_path)}"
+        else:
+            artifact_path = standard_claim_map.get(claim_type)
+            if artifact_path is None or not artifact_path.exists():
+                print(f"  Missing artifact for claim '{claim_type}': {artifact_path}")
+                return False
+            artifact_data = json.loads(artifact_path.read_text(encoding="utf-8"))
+            actual_hash = f"sha256:{hash_sha256(canonicalize(artifact_data))}"
 
         if actual_hash != expected:
             print(f"  Hash mismatch for '{claim_type}':")

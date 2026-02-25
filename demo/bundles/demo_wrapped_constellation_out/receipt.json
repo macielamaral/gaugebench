@@ -1,0 +1,98 @@
+{
+  "id": "car:b0bd630e1a3cbbb1c089cd590f1d2f5abae242dd93b0acf7b8d08ab3329638f8",
+  "run_id": "4d3de835-e29d-428c-823b-61ca2fcc23ac",
+  "created_at": "2026-02-25T05:03:39.716618Z",
+  "run": {
+    "kind": "exact",
+    "name": "gaugebench:constellation:quantum_elements",
+    "model": "gaugebench-v0.1",
+    "version": "0.1.0",
+    "seed": 0,
+    "steps": [
+      {
+        "id": "step-0",
+        "runId": "4d3de835-e29d-428c-823b-61ca2fcc23ac",
+        "orderIndex": 0,
+        "checkpointType": "benchmark",
+        "stepType": "benchmark",
+        "tokenBudget": 0,
+        "proofMode": "exact",
+        "configJson": "{\"backend\":\"quantum_elements\",\"created_at\":\"2026-02-25T05:03:39.715153Z\",\"engine\":\"constellation\",\"input_file_count\":3,\"input_source\":\"/home/marcelo/Documents/code/mramaciel/gaugebench/demo/bundles/demo_wrapped_constellation_in\",\"run_id\":\"4d3de835-e29d-428c-823b-61ca2fcc23ac\"}"
+      }
+    ]
+  },
+  "proof": {
+    "match_kind": "process",
+    "process": {
+      "sequential_checkpoints": [
+        {
+          "id": "ckpt:a3b1e633810e4f0c869d6813de39e12a",
+          "prev_chain": "",
+          "curr_chain": "109fcd0e61c73f07f31809f0fcb31d2abe1aa38f6ac0371c961cfd8b8af8e164",
+          "signature": "K726Xfq5jnPqm5nP3SQSTy7RqI9JNP2136jCk8eY6PkKLYBSpTpJCf1aH1yWQDkBjSqwsA/RyN6PN9VEr57IBg==",
+          "run_id": "4d3de835-e29d-428c-823b-61ca2fcc23ac",
+          "kind": "Step",
+          "timestamp": "2026-02-25T05:03:39.716618Z",
+          "inputs_sha256": "72f78ff85d28381a6ef3f99a7a702c2c1ba6a63dd3ead22c8769eef0da6076a0",
+          "outputs_sha256": "faf3167a49b5f284eae84f22c665ba38af96c0bac0cde7bf0acc958201d7834f",
+          "usage_tokens": 0,
+          "prompt_tokens": 0,
+          "completion_tokens": 0
+        }
+      ]
+    }
+  },
+  "policy_ref": {
+    "hash": "sha256:08b3c16f9ab10887181b449613f54a541dd5d89e1be140be48d84d14c8356df6",
+    "egress": true,
+    "estimator": "gaugebench.walltime.v0"
+  },
+  "budgets": {
+    "usd": 0.0,
+    "tokens": 0,
+    "nature_cost": 0.0
+  },
+  "provenance": [
+    {
+      "claim_type": "manifest",
+      "sha256": "sha256:72f78ff85d28381a6ef3f99a7a702c2c1ba6a63dd3ead22c8769eef0da6076a0"
+    },
+    {
+      "claim_type": "results",
+      "sha256": "sha256:faf3167a49b5f284eae84f22c665ba38af96c0bac0cde7bf0acc958201d7834f"
+    },
+    {
+      "claim_type": "git_context",
+      "sha256": "sha256:88d418e9d9d88725d3cc83da375ac080cc03e46a65095833674c6a7d9eb63bd3"
+    },
+    {
+      "claim_type": "input:inputs/config.json",
+      "sha256": "sha256:9396eaf81e6d84345ea81bf94c2ed0c860279c211100a1065d88099d49b023f3"
+    },
+    {
+      "claim_type": "input:inputs/logs.txt",
+      "sha256": "sha256:2a22cb6fe4c8db84b7294962f7ce9eba00d98463e00975f4c72bc88e61914f05"
+    },
+    {
+      "claim_type": "input:inputs/metrics.json",
+      "sha256": "sha256:9e4044d644263bfe0d797ed9958668ec2188294af22a2774171a066658539d21"
+    }
+  ],
+  "checkpoints": [
+    "ckpt:a3b1e633810e4f0c869d6813de39e12a"
+  ],
+  "sgrade": {
+    "score": 100,
+    "components": {
+      "provenance": 1.0,
+      "energy": 1.0,
+      "replay": 1.0,
+      "consent": 1.0,
+      "incidents": 0.0
+    }
+  },
+  "signer_public_key": "6jH8BUS9BxAzPdJawMlJcpTNeOOWfLlmqgGyQ8eXTKw=",
+  "signatures": [
+    "ed25519:LlNjfsj9mwJcRp+U3cA32NFN91KLtskJ0fbQOvLZhy+TTcux/24iLkCcARKQ+G9Gtd54e0Eltg+FhFUz10EXBg=="
+  ]
+}

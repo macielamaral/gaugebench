@@ -54,11 +54,46 @@ Verification checks:
 - Process checkpoint chain integrity
 - Ed25519 signature (when pynacl is installed and receipt is signed)
 
+### Wrap third-party results
+
+Prove claims about an existing result folder without modifying the original data:
+
+```bash
+gaugebench wrap \
+    --in  path/to/constellation_export/ \
+    --out runs/wrapped_01 \
+    --engine constellation \
+    --backend quantum_elements
+
+gaugebench verify runs/wrapped_01
+```
+
+Every file under `--in` is copied to `runs/wrapped_01/inputs/` and receives its own
+`sha256` claim in the receipt. Tamper any input file and verification prints **TAMPERED**
+with the exact file and hash mismatch.
+
 ### Using as a Python module
 
 ```bash
-python -m gaugebench run qic --backend ibm_brisbane --out runs/test_01
-python -m gaugebench verify runs/test_01
+python3 -m gaugebench run qic --backend ibm_brisbane --out runs/test_01
+python3 -m gaugebench verify runs/test_01
+```
+
+### Global options
+
+```
+gaugebench --quiet <subcommand>   # suppress [WARN] messages
+```
+
+## Demo
+
+See [demo/README.md](demo/README.md) for a 2-minute walkthrough.
+
+```bash
+make demo-offline    # uses a pre-committed signed bundle — fastest
+make demo-live       # generates a fresh local run (aer, no credentials)
+make demo-signed     # fresh signed run with Ed25519
+make demo-wrap       # wraps a Constellation export folder
 ```
 
 ## How It Works
@@ -73,3 +108,5 @@ Each run produces four files in the output directory:
 | `receipt.json` | CAR v0.3 receipt binding all artifacts together |
 
 The receipt uses **process-mode proofs**: a checkpoint links `inputs_sha256` (manifest) to `outputs_sha256` (results) via a hash chain. The receipt ID (`car:<sha256>`) is derived from the canonical JSON hash of the receipt body. Verification re-hashes every artifact, re-derives the chain, and re-derives the ID — no central server required.
+
+For wrapped runs (`gaugebench wrap`), every input file also gets an `input:<path>` provenance claim whose hash is computed over raw bytes.

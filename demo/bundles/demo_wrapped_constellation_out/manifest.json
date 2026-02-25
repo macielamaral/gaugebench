@@ -1,0 +1,8 @@
+{
+  "run_id": "4d3de835-e29d-428c-823b-61ca2fcc23ac",
+  "engine": "constellation",
+  "backend": "quantum_elements",
+  "input_source": "/home/marcelo/Documents/code/mramaciel/gaugebench/demo/bundles/demo_wrapped_constellation_in",
+  "input_file_count": 3,
+  "created_at": "2026-02-25T05:03:39.715153Z"
+}

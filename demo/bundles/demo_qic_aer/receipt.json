@@ -1,0 +1,86 @@
+{
+  "id": "car:a29822ffa5799f6787dede991fcda627ebfa838aad70aa218d41b71399883d05",
+  "run_id": "93612ea6-308c-4621-a5f2-b1df69f8e4f2",
+  "created_at": "2026-02-25T05:02:47.392485Z",
+  "run": {
+    "kind": "exact",
+    "name": "gaugebench:qic:aer",
+    "model": "gaugebench-v0.1",
+    "version": "0.1.0",
+    "seed": 0,
+    "steps": [
+      {
+        "id": "step-0",
+        "runId": "93612ea6-308c-4621-a5f2-b1df69f8e4f2",
+        "orderIndex": 0,
+        "checkpointType": "benchmark",
+        "stepType": "benchmark",
+        "tokenBudget": 0,
+        "proofMode": "exact",
+        "configJson": "{\"backend\":\"aer\",\"created_at\":\"2026-02-25T05:02:47.390781Z\",\"engine\":\"qic\",\"run_id\":\"93612ea6-308c-4621-a5f2-b1df69f8e4f2\",\"shots\":1024}"
+      }
+    ]
+  },
+  "proof": {
+    "match_kind": "process",
+    "process": {
+      "sequential_checkpoints": [
+        {
+          "id": "ckpt:810dffc2b4814fe4bac9c7a8dafb25ad",
+          "prev_chain": "",
+          "curr_chain": "94cf79b701c6a85f85dc354b235e0d098ee39ecfe09458815b02b5c21cbc2b1e",
+          "signature": "",
+          "run_id": "93612ea6-308c-4621-a5f2-b1df69f8e4f2",
+          "kind": "Step",
+          "timestamp": "2026-02-25T05:02:47.392485Z",
+          "inputs_sha256": "fdde5296dc536ad5b117e7114dde7e140a965fb973c42a338fa022d89ef1512d",
+          "outputs_sha256": "fccb00f90f688d1a9f5cdfe693907b36af27cb477676f4f0c281f719dd09e79a",
+          "usage_tokens": 0,
+          "prompt_tokens": 0,
+          "completion_tokens": 0
+        }
+      ]
+    }
+  },
+  "policy_ref": {
+    "hash": "sha256:08b3c16f9ab10887181b449613f54a541dd5d89e1be140be48d84d14c8356df6",
+    "egress": false,
+    "estimator": "gaugebench.walltime.v0"
+  },
+  "budgets": {
+    "usd": 0.0,
+    "tokens": 0,
+    "nature_cost": 0.0
+  },
+  "provenance": [
+    {
+      "claim_type": "manifest",
+      "sha256": "sha256:fdde5296dc536ad5b117e7114dde7e140a965fb973c42a338fa022d89ef1512d"
+    },
+    {
+      "claim_type": "results",
+      "sha256": "sha256:fccb00f90f688d1a9f5cdfe693907b36af27cb477676f4f0c281f719dd09e79a"
+    },
+    {
+      "claim_type": "git_context",
+      "sha256": "sha256:1e3559c251f92f88cb5c4ae4a8f94345f59a761a017078fe713d6b65829f969f"
+    }
+  ],
+  "checkpoints": [
+    "ckpt:810dffc2b4814fe4bac9c7a8dafb25ad"
+  ],
+  "sgrade": {
+    "score": 100,
+    "components": {
+      "provenance": 1.0,
+      "energy": 1.0,
+      "replay": 1.0,
+      "consent": 1.0,
+      "incidents": 0.0
+    }
+  },
+  "signer_public_key": "AA==",
+  "signatures": [
+    "unsigned:placeholder"
+  ]
+}

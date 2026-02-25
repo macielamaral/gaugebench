@@ -1,0 +1,13 @@
+2026-02-24T10:00:00Z [INFO]  Constellation export started
+2026-02-24T10:00:01Z [INFO]  Backend: constellation_alpha (127 qubits)
+2026-02-24T10:00:02Z [INFO]  Experiment: randomized_benchmarking
+2026-02-24T10:01:14Z [INFO]  Clifford depth 1   — 50 circuits submitted
+2026-02-24T10:02:31Z [INFO]  Clifford depth 2   — 50 circuits submitted
+2026-02-24T10:04:08Z [INFO]  Clifford depth 4   — 50 circuits submitted
+2026-02-24T10:06:55Z [INFO]  Clifford depth 8   — 50 circuits submitted
+2026-02-24T10:11:03Z [INFO]  Clifford depth 16  — 50 circuits submitted
+2026-02-24T10:12:47Z [INFO]  Clifford depth 32  — 50 circuits submitted
+2026-02-24T10:13:59Z [INFO]  Clifford depth 64  — 50 circuits submitted
+2026-02-24T10:15:00Z [INFO]  Clifford depth 128 — 50 circuits submitted
+2026-02-24T10:15:00Z [INFO]  All results collected. EPG = 0.00091
+2026-02-24T10:15:00Z [INFO]  Export complete → metrics.json

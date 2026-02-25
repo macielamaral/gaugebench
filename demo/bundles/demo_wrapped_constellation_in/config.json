@@ -1,0 +1,17 @@
+{
+  "provider": "quantum_elements",
+  "engine": "constellation",
+  "version": "2.1.0",
+  "backend": {
+    "name": "constellation_alpha",
+    "qubits": 127,
+    "topology": "heavy_hex",
+    "basis_gates": ["cx", "id", "rz", "sx", "x"]
+  },
+  "experiment": {
+    "type": "randomized_benchmarking",
+    "num_cliffords": [1, 2, 4, 8, 16, 32, 64, 128],
+    "num_samples": 50,
+    "shots": 1024
+  }
+}

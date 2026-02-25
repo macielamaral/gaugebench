@@ -1,0 +1,86 @@
+{
+  "id": "car:3e43861d3ca82a5aead656d627e04fa0f9d4facd279045dc71df862a75ec3ed9",
+  "run_id": "335ac4ed-b98b-41c0-ac4e-d845e6571978",
+  "created_at": "2026-02-25T05:02:57.433156Z",
+  "run": {
+    "kind": "exact",
+    "name": "gaugebench:qic:aer",
+    "model": "gaugebench-v0.1",
+    "version": "0.1.0",
+    "seed": 0,
+    "steps": [
+      {
+        "id": "step-0",
+        "runId": "335ac4ed-b98b-41c0-ac4e-d845e6571978",
+        "orderIndex": 0,
+        "checkpointType": "benchmark",
+        "stepType": "benchmark",
+        "tokenBudget": 0,
+        "proofMode": "exact",
+        "configJson": "{\"backend\":\"aer\",\"created_at\":\"2026-02-25T05:02:57.431616Z\",\"engine\":\"qic\",\"run_id\":\"335ac4ed-b98b-41c0-ac4e-d845e6571978\",\"shots\":1024}"
+      }
+    ]
+  },
+  "proof": {
+    "match_kind": "process",
+    "process": {
+      "sequential_checkpoints": [
+        {
+          "id": "ckpt:0d58e8460ab846fab7d8161566a82d23",
+          "prev_chain": "",
+          "curr_chain": "2b48c7e7446ee106acf5556690929509ae3ed0eab4e663174887952e43afb122",
+          "signature": "91vBXdh44DQ4L2L208qosEmsGIohwpSjYFgZqPCQpmIN1l+UuH9U5uxSgOom0kukNHpa07cqw9h4jt2OythoCg==",
+          "run_id": "335ac4ed-b98b-41c0-ac4e-d845e6571978",
+          "kind": "Step",
+          "timestamp": "2026-02-25T05:02:57.433156Z",
+          "inputs_sha256": "c69959e8b42212fe33e742db12ce14505220b55e720977e4a73eed02725e359d",
+          "outputs_sha256": "fccb00f90f688d1a9f5cdfe693907b36af27cb477676f4f0c281f719dd09e79a",
+          "usage_tokens": 0,
+          "prompt_tokens": 0,
+          "completion_tokens": 0
+        }
+      ]
+    }
+  },
+  "policy_ref": {
+    "hash": "sha256:08b3c16f9ab10887181b449613f54a541dd5d89e1be140be48d84d14c8356df6",
+    "egress": false,
+    "estimator": "gaugebench.walltime.v0"
+  },
+  "budgets": {
+    "usd": 0.0,
+    "tokens": 0,
+    "nature_cost": 0.0
+  },
+  "provenance": [
+    {
+      "claim_type": "manifest",
+      "sha256": "sha256:c69959e8b42212fe33e742db12ce14505220b55e720977e4a73eed02725e359d"
+    },
+    {
+      "claim_type": "results",
+      "sha256": "sha256:fccb00f90f688d1a9f5cdfe693907b36af27cb477676f4f0c281f719dd09e79a"
+    },
+    {
+      "claim_type": "git_context",
+      "sha256": "sha256:1e3559c251f92f88cb5c4ae4a8f94345f59a761a017078fe713d6b65829f969f"
+    }
+  ],
+  "checkpoints": [
+    "ckpt:0d58e8460ab846fab7d8161566a82d23"
+  ],
+  "sgrade": {
+    "score": 100,
+    "components": {
+      "provenance": 1.0,
+      "energy": 1.0,
+      "replay": 1.0,
+      "consent": 1.0,
+      "incidents": 0.0
+    }
+  },
+  "signer_public_key": "6jH8BUS9BxAzPdJawMlJcpTNeOOWfLlmqgGyQ8eXTKw=",
+  "signatures": [
+    "ed25519:0COdxJACzryLCNg/RCfHMSfZmRjaK5rAW9UnWod+hCxx4Xmskf7po7UftbopAO1aW1+cC1Mt5DF2nzSECpfvBQ=="
+  ]
+}

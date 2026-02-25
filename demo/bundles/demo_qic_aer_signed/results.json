@@ -1,0 +1,9 @@
+{
+  "engine": "qic",
+  "backend": "aer",
+  "shots": 1024,
+  "fidelity": 0.9923,
+  "gate_error_rate": 0.0012,
+  "depth": 42,
+  "two_qubit_gate_count": 87
+}

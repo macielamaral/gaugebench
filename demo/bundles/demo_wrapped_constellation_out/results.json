@@ -1,0 +1,11 @@
+{
+  "engine": "constellation",
+  "backend": "quantum_elements",
+  "input_file_count": 3,
+  "input_files": [
+    "config.json",
+    "logs.txt",
+    "metrics.json"
+  ],
+  "total_bytes": 2074
+}
